@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "710504484380",
+    "project_id": "ruletka312",
+    "storage_bucket": "ruletka312.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:710504484380:android:a38d6b5df0be2edad319d9",
+        "android_client_info": {
+          "package_name": "com.example.ruletka"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCk0sTRRBMkW5Kzu37LXS2854TZ3hgBQ38"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
