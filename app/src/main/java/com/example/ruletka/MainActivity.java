@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.RotateAnimation;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -49,6 +50,12 @@ public class MainActivity extends AppCompatActivity {
     public void onClickStart(View v){
         soundPlay(puskSound);
 
+        // Заблокировать кнопки "Сделать ставку" и "Угадать"
+        Button btnBet = findViewById(R.id.btnBet);
+        Button btnGuess = findViewById(R.id.btnGuess);
+        btnBet.setEnabled(false);
+        btnGuess.setEnabled(false);
+
         old_deegere = deegere % 360;
         deegere = random.nextInt(3600) + 720;
         RotateAnimation rotate = new RotateAnimation(old_deegere, deegere,
@@ -65,6 +72,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onAnimationEnd(Animation animation) {
                 tvResult.setText(getResult(360 - (deegere % 360)));
+
+                // Разблокировать кнопки "Сделать ставку" и "Угадать" после завершения вращения рулетки
+                btnBet.setEnabled(true);
+                btnGuess.setEnabled(true);
             }
             @Override
             public void onAnimationRepeat(Animation animation) {
@@ -156,7 +167,6 @@ public class MainActivity extends AppCompatActivity {
         tvBank.setText("Банк: " + bank);
         tvCurrentBet.setText("Текущая ставка: " + currentBet);
     }
-
 
     private void showToast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
