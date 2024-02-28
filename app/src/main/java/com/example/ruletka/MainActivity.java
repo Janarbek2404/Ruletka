@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
@@ -45,7 +47,32 @@ public class MainActivity extends AppCompatActivity {
         musicSound = MediaPlayer.create(this, R.raw.music);
         puskSound = MediaPlayer.create(this, R.raw.pusk);
         soundPlay(musicSound);
+
+        // Добавляем слушатель текста к полю ввода числа
+        EditText editTextBet = findViewById(R.id.editTextBet);
+        editTextBet.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                // Не требуется реализация
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                // Проверяем, пустое ли поле ввода
+                String betStr = charSequence.toString();
+                Button btnStart = findViewById(R.id.button);
+                Button btnGuess = findViewById(R.id.btnGuess);
+                btnStart.setEnabled(!betStr.isEmpty());
+                btnGuess.setEnabled(!betStr.isEmpty());
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                // Не требуется реализация
+            }
+        });
     }
+
 
     public void onClickStart(View v){
         soundPlay(puskSound);
@@ -53,35 +80,46 @@ public class MainActivity extends AppCompatActivity {
         // Заблокировать кнопки "Сделать ставку" и "Угадать"
         Button btnBet = findViewById(R.id.btnBet);
         Button btnGuess = findViewById(R.id.btnGuess);
-        btnBet.setEnabled(false);
+        Button btnStart = findViewById(R.id.button);
+        btnStart.setEnabled(false);
         btnGuess.setEnabled(false);
+        btnBet.setEnabled(false);
 
-        old_deegere = deegere % 360;
-        deegere = random.nextInt(3600) + 720;
-        RotateAnimation rotate = new RotateAnimation(old_deegere, deegere,
-                RotateAnimation.RELATIVE_TO_SELF, 0.5f,
-                RotateAnimation.RELATIVE_TO_SELF,0.5f);
-        rotate.setDuration(3600);
-        rotate.setFillAfter(true);
-        rotate.setInterpolator(new DecelerateInterpolator());
-        rotate.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-                tvResult.setText("");
-            }
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                tvResult.setText(getResult(360 - (deegere % 360)));
+        // Проверяем, что текущая ставка больше нуля
+        if (currentBet > 0) {
+            old_deegere = deegere % 360;
+            deegere = random.nextInt(3600) + 720;
+            RotateAnimation rotate = new RotateAnimation(old_deegere, deegere,
+                    RotateAnimation.RELATIVE_TO_SELF, 0.5f,
+                    RotateAnimation.RELATIVE_TO_SELF,0.5f);
+            rotate.setDuration(3600);
+            rotate.setFillAfter(true);
+            rotate.setInterpolator(new DecelerateInterpolator());
+            rotate.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+                    tvResult.setText("");
+                }
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    tvResult.setText(getResult(360 - (deegere % 360)));
 
-                // Разблокировать кнопки "Сделать ставку" и "Угадать" после завершения вращения рулетки
-                btnBet.setEnabled(true);
-                btnGuess.setEnabled(true);
-            }
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-        });
-        rul.startAnimation(rotate);
+                    // Разблокировать кнопку "Крутить" после завершения вращения рулетки
+                    btnStart.setEnabled(true);
+                    btnGuess.setEnabled(true);
+                    btnBet.setEnabled(true);
+                }
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+                }
+            });
+            rul.startAnimation(rotate);
+        } else {
+            showToast("Сделайте ставку, прежде чем крутить рулетку.");
+            btnStart.setEnabled(true);
+            btnGuess.setEnabled(true);
+            btnBet.setEnabled(true);
+        }
     }
 
     private void init(){
@@ -91,6 +129,28 @@ public class MainActivity extends AppCompatActivity {
         rul = findViewById(R.id.rul);
         random = new Random();
         updateBankAndBet();
+
+        // Добавление слушателя текста к EditText
+        EditText editTextGuess = findViewById(R.id.editTextGuess);
+        editTextGuess.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                // Не требуется реализация
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                // Проверка введенного текста при изменении текста
+                String guessStr = charSequence.toString();
+                Button btnGuess = findViewById(R.id.btnGuess);
+                btnGuess.setEnabled(!guessStr.isEmpty());
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                // Не требуется реализация
+            }
+        });
     }
 
     private String getResult(int deegere){
@@ -113,6 +173,9 @@ public class MainActivity extends AppCompatActivity {
     public void onClickGuess(View view) {
         EditText editTextGuess = findViewById(R.id.editTextGuess);
         String guessStr = editTextGuess.getText().toString();
+
+        Button btnGuess = findViewById(R.id.btnGuess);
+        btnGuess.setEnabled(false);
         if (!guessStr.isEmpty()) {
             // Получаем текст из TextView и удаляем знаки, оставляя только цифры
             String resultStr = tvResult.getText().toString().replaceAll("\\D+", "");
@@ -124,8 +187,8 @@ public class MainActivity extends AppCompatActivity {
 
                 // Получаем предполагаемое пользователем число из EditText
                 int userGuess = Integer.parseInt(editTextGuess.getText().toString());
-
                 // Проверяем, совпадает ли предполагаемое число с числом из TextView
+                btnGuess.setEnabled(true);
                 if (userGuess == randomNumber) {
                     showToast("Поздравляем, вы угадали число: " + randomNumber);
                     // Умножение банка на 2 при угадывании числа
@@ -151,16 +214,43 @@ public class MainActivity extends AppCompatActivity {
         String betStr = editTextBet.getText().toString();
         if (!betStr.isEmpty()) {
             int betAmount = Integer.parseInt(betStr);
-            if (betAmount > 0 && betAmount <= bank) {
-                currentBet += betAmount; // Увеличиваем текущую ставку
-                bank -= betAmount; // Уменьшаем банк на сумму ставки
-                updateBankAndBet(); // Обновляем отображаемую информацию
+            if (betAmount > 0) {
+                if (betAmount <= bank) {
+                    currentBet += betAmount; // Увеличиваем текущую ставку
+                    bank -= betAmount; // Уменьшаем банк на сумму ставки
+                    updateBankAndBet(); // Обновляем отображаемую информацию
+                } else {
+                    // Предложение взять кредит
+                    showToast("Недостаточно средств для совершения ставки. Хотите взять кредит?");
+                    // Разблокировка кнопки для взятия кредита
+                    Button btnCredit = findViewById(R.id.btnCredit);
+                    btnCredit.setVisibility(View.VISIBLE);
+                    btnCredit.setEnabled(true);
+                }
             } else {
-                showToast("Недостаточно средств для совершения ставки.");
+                showToast("Пожалуйста, введите сумму ставки.");
             }
-        } else {
-            showToast("Пожалуйста, введите сумму ставки.");
+
+            // Блокировка кнопок "Крутить" и "Угадать", если ставка не сделана
+            Button btnStart = findViewById(R.id.button);
+            Button btnGuess = findViewById(R.id.btnGuess);
+            if (currentBet <= 0) {
+                btnStart.setEnabled(false);
+                btnGuess.setEnabled(false);
+            }
         }
+    }
+
+    public void onClickCredit(View v) {
+        // Предложение взять кредит
+        showToast("Вы взяли кредит. У вас плюс 1000 на счету.");
+        bank += 1000; // Добавляем 1000 к банку
+        updateBankAndBet(); // Обновляем отображаемую информацию о банке и ставке
+
+        // Блокировка кнопки "Взять кредит" после взятия
+        Button btnCredit = findViewById(R.id.btnCredit);
+        btnCredit.setVisibility(View.GONE);
+        btnCredit.setEnabled(false);
     }
 
     private void updateBankAndBet() {
